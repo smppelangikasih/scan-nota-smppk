@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart Scan AI - Keuangan Sekolah</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #0d6efd;
+      --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    body {
+      background: var(--bg-gradient);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .card-scan {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+    }
+
+    .card-header-custom {
+      background: #ffffff;
+      padding: 20px 24px 10px 24px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .doc-selector {
+      display: flex;
+      gap: 10px;
+      background: #f1f3f5;
+      padding: 5px;
+      border-radius: 12px;
+      margin-top: 15px;
+    }
+
+    .doc-selector input[type="radio"] {
+      display: none;
+    }
+
+    .doc-selector label {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6c757d;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .doc-selector input[type="radio"]:checked + label {
+      background: #ffffff;
+      color: var(--primary-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .camera-trigger {
+      border: 2px dashed #0d6efd40;
+      border-radius: 16px;
+      background: #f8faff;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .camera-trigger:hover {
+      background: #eef5ff;
+      border-color: var(--primary-color);
+    }
+
+    .camera-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      background: #0d6efd15;
+      color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px auto;
+      font-size: 28px;
+    }
+
+    .preview-container {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 240px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-img {
+      width: 100%;
+      max-height: 240px;
+      object-fit: contain;
+    }
+
+    .scan-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .pulse-loader {
+      width: 44px;
+      height: 44px;
+      border: 4px solid #ffffff40;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .alert-banner {
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .alert-banner-success {
+      background: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      color: #1b5e20;
+    }
+
+    .alert-banner-error {
+      background: #ffebee;
+      border: 1px solid #ffcdd2;
+      color: #b71c1c;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card card-scan">
+  <div class="card-header-custom">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h6 class="fw-bold mb-0 text-dark">Smart Scan AI</h6>
+        <small class="text-muted" style="font-size: 12px;">SMP Kristen Pelangi Kasih</small>
+      </div>
+      <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2" style="font-size: 11px;">
+        <i class="bi bi-stars me-1"></i>Gemini AI
+      </span>
+    </div>
+
+    <!-- Switcher Jenis Dokumen -->
+    <div class="doc-selector">
+      <input type="radio" name="docType" id="typeNota" value="NOTA" checked>
+      <label for="typeNota"><i class="bi bi-receipt me-1"></i>Nota / Struk</label>
+      
+      <input type="radio" name="docType" id="typeSRB" value="SRB">
+      <label for="typeSRB"><i class="bi bi-card-checklist me-1"></i>Kartu SRB</label>
+    </div>
+  </div>
+
+  <div class="card-body p-4">
+    
+    <!-- Zone 1: Tombol Ambil Foto -->
+    <div id="uploadZone">
+      <label for="cameraInput" class="camera-trigger d-block">
+        <div class="camera-icon-wrapper">
+          <i class="bi bi-camera-fill"></i>
+        </div>
+        <h6 class="fw-bold text-dark mb-1">Ambil Foto / Pilih Gambar</h6>
+        <p class="text-muted mb-0" style="font-size: 12px;">Foto otomatis dianalisis & disimpan ke Sheets</p>
+      </label>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" class="d-none" onchange="handleDirectCapture(event)">
+    </div>
+
+    <!-- Zone 2: Preview & Overlay Loading -->
+    <div id="processingZone" class="d-none">
+      <div class="preview-container">
+        <img id="previewImage" class="preview-img" src="" alt="Preview Bukti">
+        
+        <div id="scanOverlay" class="scan-overlay">
+          <div class="pulse-loader mb-3"></div>
+          <span class="fw-bold fs-6">Menganalisis Gambar...</span>
+          <small class="text-white-50 fs-7 mt-1" id="statusSubtext">Gemini AI sedang membaca teks & nominal</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone 3: Notifikasi Status In-Line -->
+    <div id="notificationZone" class="mt-3 d-none"></div>
+
+    <!-- Zone 4: Ringkasan Data -->
+    <div id="summaryZone" class="mt-3 d-none">
+      <div class="p-3 rounded-3 bg-light border">
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+          <span class="fw-bold text-secondary" style="font-size: 12px;">RINGKASAN TRANSAKSI</span>
+          <span id="badgeType" class="badge bg-secondary"></span>
+        </div>
+        <div id="summaryContent" style="font-size: 13px; line-height: 1.6;"></div>
+      </div>
+
+      <button class="btn btn-outline-primary w-100 rounded-3 mt-3 py-2 fw-semibold" onclick="resetForm()">
+        <i class="bi bi-camera me-1"></i> Scan Dokumen Lain
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // GANTI URL DI BAWAH INI DENGAN URL WEB APP DEPLOYMENT GOOGLE APPS SCRIPT KAMU
+  // =========================================================================
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzSbvHfppCMbCG8ntrXPpAEzKdgw0e08m-ncGBCbIh4zMGzsYg_NG7DD1DCOjMlf8ns/exec";
+
+  let base64Image = "";
+  let mimeType = "";
+
+  function handleDirectCapture(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    mimeType = file.type;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      base64Image = e.target.result;
+
+      document.getElementById('previewImage').src = base64Image;
+      document.getElementById('uploadZone').classList.add('d-none');
+      document.getElementById('processingZone').classList.remove('d-none');
+      document.getElementById('scanOverlay').classList.remove('d-none');
+      
+      hideNotification();
+      executeProcessAndSave();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function executeProcessAndSave() {
+    const docType = document.querySelector('input[name="docType"]:checked').value;
+
+    const requestPayload = {
+      action: 'processScan',
+      data: {
+        docType: docType,
+        imageBase64: base64Image,
+        mimeType: mimeType
+      }
+    };
+
+    fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(requestPayload)
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        saveTransactionToSheet(docType, res.data, res.fileUrl);
+      } else {
+        showErrorNotification("Gagal membaca gambar: " + res.message);
+      }
+    })
+    .catch(err => showErrorNotification("Kesalahan Koneksi ke GAS: " + err.message));
+  }
+
+  function saveTransactionToSheet(docType, aiData, driveUrl) {
+    document.getElementById('statusSubtext').innerText = "Menghitung & Menyimpan ke Sheets...";
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (docType === 'NOTA') {
+      const tgl = aiData.tanggal || today;
+      const toko = aiData.toko || '';
+      const ket = aiData.keterangan || '';
+      const nominal = Number(aiData.nominal) || 0;
+
+      let fullKet = `[Scan AI Nota] ${toko ? toko + ' - ' : ''}${ket}`;
+      if (driveUrl) fullKet += ` (Bukti: ${driveUrl})`;
+
+      const txPayload = {
+        action: 'simpanTransaksi',
+        data: {
+          tx: {
+            id: 'TX-' + Date.now(),
+            tanggal: tgl,
+            idSiswa: '',
+            jenis: 'Pengeluaran',
+            nominal: nominal,
+            tipe: 'Pengeluaran',
+            keterangan: fullKet,
+            user: 'Admin Scan'
+          }
+        }
+      };
+
+      sendToGas(txPayload, docType, aiData);
+
+    } else {
+      // Pembayaran SRB: Ambil data awal siswa dari GAS untuk menghitung perkalian bulan SPP
+      fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: 'getInitialData' })
+      })
+      .then(res => res.json())
+      .then(initialData => {
+        const nis = aiData.nis || '';
+        const nominal = Number(aiData.nominal) || 0;
+        const students = initialData.students || [];
+        const student = students.find(s => s.id === nis);
+
+        let fullKet = "";
+        let newLastPaid = "";
+
+        if (student && student.sppRate > 0) {
+          const sppRate = student.sppRate;
+          const jumlahBulan = Math.floor(nominal / sppRate);
+
+          if (jumlahBulan > 0) {
+            let startYear, startMonth;
+            if (student.lastPaid && student.lastPaid.includes('-')) {
+              const parts = student.lastPaid.split('-');
+              startYear = parseInt(parts[0], 10);
+              startMonth = parseInt(parts[1], 10);
+            } else {
+              const now = new Date();
+              startYear = now.getFullYear();
+              startMonth = now.getMonth();
+            }
+
+            const startDate = new Date(startYear, startMonth, 1);
+            const endDate = new Date(startYear, startMonth + jumlahBulan - 1, 1);
+
+            const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const teksMulai = `${namaBulan[startDate.getMonth()]} ${startDate.getFullYear()}`;
+            const teksAkhir = `${namaBulan[endDate.getMonth()]} ${endDate.getFullYear()}`;
+
+            newLastPaid = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+
+            if (jumlahBulan === 1) {
+              fullKet = `SPP ${teksMulai} (1 bln) -`;
+            } else {
+              fullKet = `SPP ${teksMulai} s/d ${teksAkhir} (${jumlahBulan} bln) -`;
+            }
+          } else {
+            fullKet = `SPP Pembayaran ${nominal}`;
+          }
+        } else {
+          fullKet = `SPP ${aiData.bulan || ''} -`;
+        }
+
+        if (driveUrl) fullKet += ` Bukti: ${driveUrl}`;
+
+        const txPayload = {
+          action: 'simpanTransaksi',
+          data: {
+            tx: {
+              id: 'TX-' + Date.now(),
+              tanggal: today,
+              idSiswa: nis,
+              jenis: 'SPP',
+              nominal: nominal,
+              tipe: 'Masuk',
+              keterangan: fullKet,
+              user: 'Admin Scan'
+            },
+            sppUpdate: (nis && newLastPaid) ? {
+              idSiswa: nis,
+              newLastPaid: newLastPaid
+            } : null
+          }
+        };
+
+        sendToGas(txPayload, docType, aiData);
+      })
+      .catch(err => showErrorNotification("Gagal mengambil data siswa: " + err.message));
+    }
+  }
+
+  function sendToGas(payload, docType, aiData) {
+    fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+      document.getElementById('scanOverlay').classList.add('d-none');
+      if (res.success) {
+        showSuccessNotification("Transaksi berhasil diproses & disimpan!");
+        renderSummary(docType, aiData, payload.data.tx.nominal, payload.data.tx.keterangan);
+      } else {
+        showErrorNotification("Gagal menyimpan transaksi ke Sheets.");
+      }
+    })
+    .catch(err => showErrorNotification("Gagal Simpan: " + err.message));
+  }
+
+  function showSuccessNotification(message) {
+    const notifZone = document.getElementById('notificationZone');
+    notifZone.innerHTML = `
+      <div class="alert-banner alert-banner-success">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <div>
+          <div class="fw-bold" style="font-size: 14px;">Berhasil!</div>
+          <div style="font-size: 12.5px;">${message}</div>
+        </div>
+      </div>
+    `;
+    notifZone.classList.remove('d-none');
+  }
+
+  function showErrorNotification(message) {
+    document.getElementById('scanOverlay').classList.add('d-none');
+    const notifZone = document.getElementById('notificationZone');
+    notifZone.innerHTML = `
+      <div class="alert-banner alert-banner-error">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>
+          <div class="fw-bold" style="font-size: 14px;">Terjadi Kendala</div>
+          <div style="font-size: 12.5px;">${message}</div>
+        </div>
+      </div>
+      <button class="btn btn-outline-danger w-100 rounded-3 mt-2 py-1 fs-7 fw-semibold" onclick="resetForm()">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Coba Lagi
+      </button>
+    `;
+    notifZone.classList.remove('d-none');
+  }
+
+  function hideNotification() {
+    const notifZone = document.getElementById('notificationZone');
+    notifZone.innerHTML = '';
+    notifZone.classList.add('d-none');
+  }
+
+  function renderSummary(docType, data, nominal, fullKet) {
+    const summaryZone = document.getElementById('summaryZone');
+    const summaryContent = document.getElementById('summaryContent');
+    const badgeType = document.getElementById('badgeType');
+
+    const formattedNominal = "Rp " + Number(nominal).toLocaleString('id-ID');
+
+    if (docType === 'NOTA') {
+      badgeType.innerText = "NOTA PENGELUARAN";
+      badgeType.className = "badge bg-danger";
+      summaryContent.innerHTML = `
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Total Nominal:</span>
+          <span class="fw-bold text-danger">${formattedNominal}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Toko/Vendor:</span>
+          <span class="fw-semibold">${data.toko || '-'}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Keterangan:</span>
+          <span class="fw-semibold text-end" style="max-width: 65%;">${data.keterangan || '-'}</span>
+        </div>
+      `;
+    } else {
+      badgeType.innerText = "IURAN SRB / SPP";
+      badgeType.className = "badge bg-success";
+      summaryContent.innerHTML = `
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Total Bayar:</span>
+          <span class="fw-bold text-success">${formattedNominal}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">NIS Siswa:</span>
+          <span class="fw-semibold">${data.nis || '-'}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Nama Siswa:</span>
+          <span class="fw-semibold">${data.nama || '-'}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Format Ket.:</span>
+          <span class="fw-semibold text-end text-primary" style="max-width: 65%;">${fullKet}</span>
+        </div>
+      `;
+    }
+
+    summaryZone.classList.remove('d-none');
+  }
+
+  function resetForm() {
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('uploadZone').classList.remove('d-none');
+    document.getElementById('processingZone').classList.add('d-none');
+    document.getElementById('summaryZone').classList.add('d-none');
+    hideNotification();
+  }
+</script>
+
+</body>
+</html>
