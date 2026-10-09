@@ -69,6 +69,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
+    /* Pilihan Opsi Input Foto/File */
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -209,6 +210,7 @@
     <!-- Zone 1: Pilihan Antara Scan Kamera atau Upload Galeri -->
     <div id="uploadZone">
       <div class="action-grid">
+        <!-- Opsi 1: Scan Kamera Langsung -->
         <label for="cameraInput" class="action-card">
           <div class="action-icon icon-camera">
             <i class="bi bi-camera-fill"></i>
@@ -216,8 +218,10 @@
           <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Scan Kamera</h6>
           <p class="text-muted mb-0" style="font-size: 11px;">Ambil foto langsung</p>
         </label>
+        <!-- Input Kamera (capture="environment") -->
         <input type="file" id="cameraInput" accept="image/*" capture="environment" class="d-none" onchange="handleFileSelect(event)">
 
+        <!-- Opsi 2: Upload File / Galeri -->
         <label for="fileInput" class="action-card">
           <div class="action-icon icon-gallery">
             <i class="bi bi-image-fill"></i>
@@ -225,6 +229,7 @@
           <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Upload File</h6>
           <p class="text-muted mb-0" style="font-size: 11px;">Pilih dari galeri/file</p>
         </label>
+        <!-- Input File Biasa -->
         <input type="file" id="fileInput" accept="image/*" class="d-none" onchange="handleFileSelect(event)">
       </div>
     </div>
@@ -265,9 +270,9 @@
 
 <script>
   // =========================================================================
-  // ISI URL DEPLOYMENT GOOGLE APPS SCRIPT KAMU DI SINI
+  // GANTI URL DI BAWAH INI DENGAN URL WEB APP DEPLOYMENT GOOGLE APPS SCRIPT KAMU
   // =========================================================================
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzSbvHfppCMbCG8ntrXPpAEzKdgw0e08m-ncGBCbIh4zMGzsYg_NG7DD1DCOjMlf8ns/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
 
   let base64Image = "";
   let mimeType = "";
