@@ -336,7 +336,7 @@
       const ket = aiData.keterangan || '';
       const nominal = Number(aiData.nominal) || 0;
 
-      let fullKet = `[Scan AI Nota] ${toko ? toko + ' - ' : ''}${ket}`;
+      let fullKet = `${toko ? toko + ' - ' : ''}${ket}`;
       if (driveUrl) fullKet += ` (Bukti: ${driveUrl})`;
 
       const txPayload = {
@@ -346,9 +346,9 @@
             id: 'TX-' + Date.now(),
             tanggal: tgl,
             idSiswa: '',
-            jenis: 'Pengeluaran',
+            jenis: 'Operasional',
             nominal: nominal,
-            tipe: 'Pengeluaran',
+            tipe: 'Keluar',
             keterangan: fullKet,
             user: 'Admin Scan'
           }
